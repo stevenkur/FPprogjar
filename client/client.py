@@ -2,10 +2,13 @@ import socket
 import os
 from select import select
 
+
 BUFFER = 1024
 
 currentDirectory = os.path.abspath('.')
-#print currentDirectory
+
+# print currentDirectory
+
 
 class Client:
     def __init__(self, (ip, port)):
@@ -20,7 +23,7 @@ class Client:
     def run(self):
         self.open_socket()
         while True:
-			# input command
+            # input command
             command = raw_input('Command: ')
             if not command:
                 break
@@ -74,8 +77,6 @@ class Client:
         msg = self.server.recv(BUFFER)
         print msg.rstrip()
 
-
-
     def LIST(self, command):
         port = self.PASV("PASV\r\n")
 
@@ -100,13 +101,23 @@ class Client:
             port = int(tp[4]) * 256 + int(tp[5])
         return port
 
-     def HELP(self, command):
-        print "masuk sni"
+    def MKD(self, command):
         self.server.send(command)
         msg = self.server.recv(BUFFER)
         print msg.rstrip()
 
-    def SYST(self, command):
+    def RNTO(self, command):
+        self.server.send(command)
+        msg = self.server.recv(BUFFER)
+        print msg.rstrip()
+
+    def RNFR(self, command):
+        self.server.send(command)
+        msg = self.server.recv(BUFFER)
+        print msg.rstrip()
+
+    def HELP(self, command):
+        print "masuk sni"
         self.server.send(command)
         msg = self.server.recv(BUFFER)
         print msg.rstrip()
@@ -118,7 +129,6 @@ class Client:
 
     def RETR(self, command):
         filename=os.path.join(self.currentDirectory,command[5:].strip())
-        self.TYPERETR()
         port=self.PASV("PASV\r\n")
         self.data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.data_sock.connect(('localhost',port))
@@ -140,7 +150,6 @@ class Client:
 
     def STOR(self, command):
         filename=os.path.join(self.currentDirectory,command[5:].strip())
-        self.TYPESTOR()
         port=self.PASV("PASV\r\n")
         self.data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.data_sock.connect(('localhost',port))
@@ -158,6 +167,7 @@ class Client:
         
         msg = self.server.recv(1024)
         print msg.strip()
+
 
 def main():
     new_client = Client(('localhost',300000))
