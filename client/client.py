@@ -4,6 +4,9 @@ from select import select
 
 BUFFER = 1024
 
+currentDirectory = os.path.abspath('.')
+#print currentDirectory
+
 class Client:
     def __init__(self, (ip, port)):
         self.serverIp = ip
@@ -71,6 +74,8 @@ class Client:
         msg = self.server.recv(BUFFER)
         print msg.rstrip()
 
+
+
     def LIST(self, command):
         port = self.PASV("PASV\r\n")
 
@@ -95,7 +100,22 @@ class Client:
             port = int(tp[4]) * 256 + int(tp[5])
         return port
 
+     def HELP(self, command):
+        print "masuk sni"
+        self.server.send(command)
+        msg = self.server.recv(BUFFER)
+        print msg.rstrip()
 
+    def SYST(self, command):
+        self.server.send(command)
+        msg = self.server.recv(BUFFER)
+        print msg.rstrip()
+
+    
+    def CDUP(self, command):
+        self.server.send(command)
+        msg = self.server.recv(BUFFER)
+        print msg.rstrip()
 def main():
     new_client = Client(('localhost',300000))
     # new_client = Client(('10.151.43.17', 12345))
