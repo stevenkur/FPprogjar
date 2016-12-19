@@ -2,6 +2,7 @@ import socket
 import os
 from select import select
 
+BUFFER = 1024
 
 class Client:
     def __init__(self, (ip, port)):
@@ -30,8 +31,8 @@ class Client:
                     function(command)
                 except Exception, e:
                     print 'ERROR:', e
-					
-	def open_socket(self):
+
+    def open_socket(self):
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.connect((self.serverIp, self.port))
         # msg = self.server.recv(2048)
@@ -44,6 +45,22 @@ class Client:
                 for read in reads:
                     msg = self.server.recv(2048)
                     print msg.strip()
+
+    def USER(self, command):
+        self.server.send(command)
+        msg = self.server.recv(BUFFER)
+        print msg.rstrip()
+
+    def PASS(self, command):
+        self.server.send(command)
+        msg = self.server.recv(BUFFER)
+        print msg.rstrip()
+
+    def PWD(self, command):
+        self.server.send(command)
+        msg = self.server.recv(BUFFER)
+        print msg.rstrip()
+
 
 def main():
     new_client = Client(('localhost',300000))
