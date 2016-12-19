@@ -61,6 +61,24 @@ class clientHandler(threading.Thread):
             self.username = ""
             self.login = False
 
+    def PWD(self,command):
+        current_working_directory= os.path.relpath(self.current_working_directory,self.base_working_directory)
+        if current_working_directory == '.':
+            current_working_directory = '/'
+        else:
+            current_working_directory = '/' + current_working_directory
+        self.connection.send('257 \"%s\"\r\n' % current_working_directory)
+
+    def CWD(self,command):
+        change_working_directory = command[4:-2]
+        if change_working_directory =='/':
+            self.current_working_directory =self.base_working_directory
+        elif change_working_directory[0]=='/':
+            self.current_working_directory=os.path.join(self.base_working_directory,change_working_directory[1:])
+        else:
+            self.current_working_directory=os.path.join(self.current_working_directory,change_working_directory)
+        self.connection.send('250 OK.\r\n')
+
 class FTPmain(threading.Thread):
     def __init__(self, server_address):
         super(FTPmain, self).__init__()
