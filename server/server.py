@@ -1,6 +1,8 @@
 import socket
+import os
 import threading
 
+current_directory = os.path.abspath('./Dataset')
 ip_address = ''
 port = 30000
 
@@ -18,6 +20,8 @@ class clientHandler(threading.Thread):
     def __init__(self, (connection, address)):
         super(clientHandler, self).__init__()
         self.connection = connection
+        self.base_working_directory = current_directory
+        self.current_working_directory = self.base_working_directory
         self.username = ""
         self.login = False
 
