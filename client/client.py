@@ -61,6 +61,26 @@ class Client:
         msg = self.server.recv(BUFFER)
         print msg.rstrip()
 
+    def QUIT(self, command):
+        self.server.send(command)
+        msg = self.server.recv(BUFFER)
+        print msg.rstrip()
+
+    def CWD(self, command):
+        self.server.send(command)
+        msg = self.server.recv(BUFFER)
+        print msg.rstrip()
+
+    def PASV(self, command):
+        self.server.send(command)
+        msg = self.server.recv(1024)
+        print msg.strip()
+        data = msg.strip()
+        if "Entering Passive Mode" in msg:
+            tp = data.split('(')[1].split(')')[0].split(',')
+            port = int(tp[4]) * 256 + int(tp[5])
+        return port
+
 
 def main():
     new_client = Client(('localhost',300000))
