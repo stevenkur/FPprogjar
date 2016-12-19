@@ -1,10 +1,13 @@
 import socket
 import os
 import threading
+import select
 
+BUFF = 1024
 current_directory = os.path.abspath('./Dataset')
 ip_address = ''
 port = 30000
+allow_delete = True
 
 file_user = open('user_ftp.txt', 'r')
 user_ftp = []
@@ -83,6 +86,32 @@ class clientHandler(threading.Thread):
             self.current_working_directory=os.path.join(self.current_working_directory,change_working_directory)
         self.connection.send('250 OK.\r\n')
 
+    def HELP(self, command):
+        pesan = "Commands may be abbreviated. Commands are:\n USER\t PASS\t CWD\t QUIT\n RETR\t STOR\t RNTO\t DELE\n RMD\t MKD\t PWD\t LIST\n HELP\n"
+        self.connection.send(pesan)
+
+    def MKD(self, command):
+        dirname = os.path.join(self.current_working_directory, command.split(" ", 1)[1].strip())
+        # print dirname
+        os.mkdir(dirname)
+        self.connection.send('257 Directory created.\r\n')
+
+    def RMD(self, command):
+        dirname = os.path.join(self.current_working_directory, command.split(" ", 1)[1].strip())
+        if allow_delete:
+            os.rmdir(dirname)
+            self.connection.send('250 Directory deleted.\r\n')
+        else:
+            self.connection.send('450 Not allowed.\r\n')
+
+    def DELE(self, command):
+        filename = os.path.join(self.current_working_directory, command.split(" ", 1)[1].strip())
+        if allow_delete:
+            os.remove(filename)
+            self.connection.send('250 File delete.\r\n')
+        else:
+            self.connection.send('450 Not allowed.\r\n')
+            
 class FTPmain(threading.Thread):
     def __init__(self, server_address):
         super(FTPmain, self).__init__()
