@@ -25,8 +25,10 @@ class clientHandler(threading.Thread):
     def __init__(self, (connection, address)):
         super(clientHandler, self).__init__()
         self.connection = connection
+        self.address = address
         self.base_working_directory = current_directory
         self.current_working_directory = self.base_working_directory
+        self.pasive_mode = False
         self.username = ""
         self.login = False
 
@@ -87,6 +89,32 @@ class clientHandler(threading.Thread):
         else:
             self.current_working_directory=os.path.join(self.current_working_directory,change_working_directory)
         self.connection.send('250 OK.\r\n')
+    def PASV(self, cmd):  # from http://goo.gl/3if2U
+        self.pasive_mode = True
+        self.pasive_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.pasive_socket.bind((ip_address, 0))
+        self.pasive_socket.listen(1)
+        self.data_ip, self.data_port = self.pasive_socket.getsockname()
+        print 'open', self.data_ip, self.data_port
+        self.connection.send('227 Entering Passive Mode (%s,%u,%u).\r\n' %
+                       (','.join(self.data_ip.split('.')), self.data_port >> 8 & 0xFF, self.data_port & 0xFF))
+
+    def start_datasock(self):
+        if self.pasive_mode:
+            self.data_socket, addr = self.pasive_socket.accept()
+            print 'connect:', addr
+        else:
+            self.data_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.data_socket.connect((self.data_ip, self.data_port))
+
+    def stop_datasock(self):
+        self.data_socket.close()
+        if self.pasive_mode:
+            self.pasive_socket.close()
+            
+     def QUIT(self, command):
+        self.connection.send('221 Goodbye.\r\n')
+        self.login = False
 
     def LIST(self,cmd):
         self.connection.send('150 Here comes the directory listing.\r\n')
