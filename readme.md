@@ -1,3 +1,5 @@
+camelCase(variable) dan hypens(attr name) yaak, 
+
 [Membuat FTP Server dan Klien]
 Ketentuannya adalah mengimplementasikan RFC 959 (dituliskan dengan subbab) sebagai berikut
 - Membuat aplikasi FTP klien dan server
