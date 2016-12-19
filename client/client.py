@@ -28,9 +28,9 @@ class Client:
                 print '---- Command:', command.split()[0].strip().upper()
                 try:
                     function = getattr(self, command.split()[0].strip().upper())
-                    print "masuk getattr"
+                    # print "masuk getattr"
                     command+='\r\n'
-                    print "masuk getattr 2"
+                    # print "masuk getattr 2"
                     function(command)
                 except Exception, e:
                     print 'ERROR:', e
@@ -111,11 +111,54 @@ class Client:
         msg = self.server.recv(BUFFER)
         print msg.rstrip()
 
-    
     def CDUP(self, command):
         self.server.send(command)
         msg = self.server.recv(BUFFER)
         print msg.rstrip()
+
+    def RETR(self, command):
+        filename=os.path.join(self.currentDirectory,command[5:].strip())
+        self.TYPERETR()
+        port=self.PASV("PASV\r\n")
+        self.data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.data_sock.connect(('localhost',port))
+        command+="\r\n"
+        self.server.send(command)
+        msg = self.server.recv(1024)
+        print msg.strip()
+
+        with open (filename, 'wb') as f:
+            self.isi = self.data_sock.recv(4096)
+            while (self.isi):
+                if not self.isi: break
+                else:
+                    f.write(self.isi)
+                    self.isi = self.data_sock.recv(4096)
+
+        msg = self.server.recv(1024)
+        print msg.strip()
+
+    def STOR(self, command):
+        filename=os.path.join(self.currentDirectory,command[5:].strip())
+        self.TYPESTOR()
+        port=self.PASV("PASV\r\n")
+        self.data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.data_sock.connect(('localhost',port))
+
+        command+="\r\n"
+        self.server.send(command)
+        msg = self.server.recv(1024)
+        print msg.strip()
+        
+        f = open(filename,'rb')
+        l = f.read()
+        f.close()
+        self.data_sock.sendall(l)
+        self.data_sock.close()
+        
+        msg = self.server.recv(1024)
+        print msg.strip()
+
 def main():
     new_client = Client(('localhost',300000))
     # new_client = Client(('10.151.43.17', 12345))

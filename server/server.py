@@ -32,7 +32,7 @@ class clientHandler(threading.Thread):
 
     def run(self):
         self.connection.send('220 Welcome! FTP server\r\n')
-        self.connection.send('220 Team: bayu, rifat, rey, kurkur\r\n')
+        self.connection.send('220 Team: bayu, rifat, rey, stevenkur\r\n')
         self.connection.send('220 Please Check: https://github.com/stevenkur/FPprogjar\r\n')
         while True:
             command = self.connection.recv(BUFF)
@@ -137,6 +137,35 @@ class clientHandler(threading.Thread):
             self.connection.send('250 File delete.\r\n')
         else:
             self.connection.send('450 Not allowed.\r\n')
+
+    def RETR(self,command):
+        print command
+        requestedfile=os.path.join(self.current_working_directory,command.split()[1].strip())
+        print 'Downloading: ', requestedfile
+        inputfile=open(requestedfile,'rb')
+        self.connection.send('150 Opening data connection.\r\n')
+        data=inputfile.read(1024)
+        self.start_datasock()
+        while data:
+            self.data_socket.send(data)
+            data=inputfile.read(1024)
+        inputfile.close()
+        self.stop_datasock()
+        self.connection.send('226 Transfer complete.\r\n')
+
+    def STOR(self,command):
+        requestedfile=os.path.join(self.current_working_directory,command.split()[1].strip())
+        print 'Uploading: ', requestedfile
+        outputfile=open(requestedfile,'wb')
+        self.connection.send('150 Opening data connection.\r\n')
+        self.start_datasock()
+        while True:
+            data=self.data_socket.recv(1024)
+            if not data: break
+            outputfile.write(data)
+        outputfile.close()
+        self.stop_datasock()
+        self.connection.send('226 Transfer complete.\r\n')
 
 class FTPmain(threading.Thread):
     def __init__(self, server_address):
