@@ -1,10 +1,15 @@
 import socket
+import os
 import threading
 import time
+import select
 
 
+BUFF = 1024
+current_directory = os.path.abspath('./Dataset')
 ip_address = ''
 port = 30000
+allow_delete = True
 
 file_user = open('user_ftp.txt', 'r')
 user_ftp = []
@@ -20,6 +25,8 @@ class clientHandler(threading.Thread):
     def __init__(self, (connection, address)):
         super(clientHandler, self).__init__()
         self.connection = connection
+        self.base_working_directory = current_directory
+        self.current_working_directory = self.base_working_directory
         self.username = ""
         self.login = False
 
@@ -104,6 +111,32 @@ class clientHandler(threading.Thread):
         d = (os.path.isdir(fn)) and 'd' or '-'
         ftime = time.strftime(' %b %d %H:%M ', time.gmtime(st.st_mtime))
         return d + mode + ' 1 user group ' + str(st.st_size) + ftime + os.path.basename(fn)
+
+    def HELP(self, command):
+        pesan = "Commands may be abbreviated. Commands are:\n USER\t PASS\t CWD\t QUIT\n RETR\t STOR\t RNTO\t DELE\n RMD\t MKD\t PWD\t LIST\n HELP\n"
+        self.connection.send(pesan)
+
+    def MKD(self, command):
+        dirname = os.path.join(self.current_working_directory, command.split(" ", 1)[1].strip())
+        # print dirname
+        os.mkdir(dirname)
+        self.connection.send('257 Directory created.\r\n')
+
+    def RMD(self, command):
+        dirname = os.path.join(self.current_working_directory, command.split(" ", 1)[1].strip())
+        if allow_delete:
+            os.rmdir(dirname)
+            self.connection.send('250 Directory deleted.\r\n')
+        else:
+            self.connection.send('450 Not allowed.\r\n')
+
+    def DELE(self, command):
+        filename = os.path.join(self.current_working_directory, command.split(" ", 1)[1].strip())
+        if allow_delete:
+            os.remove(filename)
+            self.connection.send('250 File delete.\r\n')
+        else:
+            self.connection.send('450 Not allowed.\r\n')
 
 class FTPmain(threading.Thread):
     def __init__(self, server_address):
