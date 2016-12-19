@@ -71,6 +71,20 @@ class Client:
         msg = self.server.recv(BUFFER)
         print msg.rstrip()
 
+    def LIST(self, command):
+        port = self.PASV("PASV\r\n")
+
+        self.data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.data_sock.connect((self.serverIp, port))
+        self.server.send(command)
+
+        self.recvdata = self.data_sock.recv(1024)
+        print self.recvdata.strip()
+        msg = self.server.recv(1024)
+        print msg.strip()
+        msg = self.server.recv(1024)
+        print msg.strip()
+
     def PASV(self, command):
         self.server.send(command)
         msg = self.server.recv(1024)

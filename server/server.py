@@ -1,5 +1,7 @@
 import socket
 import threading
+import time
+
 
 ip_address = ''
 port = 30000
@@ -78,6 +80,30 @@ class clientHandler(threading.Thread):
         else:
             self.current_working_directory=os.path.join(self.current_working_directory,change_working_directory)
         self.connection.send('250 OK.\r\n')
+
+    def LIST(self,cmd):
+        self.connection.send('150 Here comes the directory listing.\r\n')
+        print 'list:', self.current_working_directory
+        self.start_datasock()
+        k=''
+        for t in os.listdir(self.current_working_directory):
+            k+=self.toListItem(os.path.join(self.current_working_directory,t))
+            # self.datasock.send(k+'\r\n')
+            k+='\r\n'
+        print k
+        self.data_socket.sendall(k)
+        self.stop_datasock()
+        self.connection.send('226 Directory send OK.\r\n')
+
+    def toListItem(self, fn):
+        st = os.stat(fn)
+        fullmode = 'rwxrwxrwx'
+        mode = ''
+        for i in range(9):
+            mode += ((st.st_mode >> (8 - i)) & 1) and fullmode[i] or '-'
+        d = (os.path.isdir(fn)) and 'd' or '-'
+        ftime = time.strftime(' %b %d %H:%M ', time.gmtime(st.st_mtime))
+        return d + mode + ' 1 user group ' + str(st.st_size) + ftime + os.path.basename(fn)
 
 class FTPmain(threading.Thread):
     def __init__(self, server_address):
