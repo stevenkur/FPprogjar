@@ -127,6 +127,16 @@ class Client:
         msg = self.server.recv(BUFFER)
         print msg.rstrip()
 
+    def RMD(self, command):
+        self.server.send(command)
+        msg = self.server.recv(BUFFER)
+        print msg.rstrip()
+
+    def DELE(self, command):
+        self.server.send(command)
+        msg = self.server.recv(BUFFER)
+        print msg.rstrip()
+
     def RETR(self, command):
         filename=os.path.join(self.currentDirectory,command[5:].strip())
         port=self.PASV("PASV\r\n")
