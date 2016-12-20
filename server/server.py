@@ -112,7 +112,7 @@ class clientHandler(threading.Thread):
         if self.pasive_mode:
             self.pasive_socket.close()
             
-     def QUIT(self, command):
+    def QUIT(self, command):
         self.connection.send('221 Goodbye.\r\n')
         self.login = False
 

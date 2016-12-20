@@ -180,7 +180,7 @@ class Client:
 
 
 def main():
-    new_client = Client(('localhost',300000))
+    new_client = Client(('localhost',30000))
     # new_client = Client(('10.151.43.17', 12345))
     new_client.run()
 
