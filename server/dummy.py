@@ -4,9 +4,8 @@ import threading
 import time
 import select
 
-
 BUFF = 1024
-current_directory = os.path.abspath('.')
+current_directory = os.path.abspath('./Dataset')
 ip_address = ''
 # print ip_address
 port = 30000
@@ -19,8 +18,9 @@ while True:
     u = file_user.readline()
     if not u:
         break
-    user_ftp.append((u.split()[0],u.split()[1]))
+    user_ftp.append((u.split()[0], u.split()[1]))
     count_user += 1
+
 
 class clientHandler(threading.Thread):
     def __init__(self, (connection, address)):
@@ -78,34 +78,24 @@ class clientHandler(threading.Thread):
             self.username = ""
             self.login = False
 
-    def PWD(self,command):
-        current_working_directory= os.path.relpath(self.current_working_directory,self.base_working_directory)
+    def PWD(self, command):
+        current_working_directory = os.path.relpath(self.current_working_directory, self.base_working_directory)
         if current_working_directory == '.':
             current_working_directory = '/'
         else:
             current_working_directory = '/' + current_working_directory
         self.connection.send('257 \"%s\"\r\n' % current_working_directory)
 
-    def CWD(self,command):
+    def CWD(self, command):
+        if  self.che
         change_working_directory = command[4:-2]
-        if self.checkExist(command):
-            os.chdir(change_working_directory)
-            self.connection.send('250 OK.\r\n')
-            if change_working_directory =='/':
-                self.current_working_directory =self.base_working_directory
-            elif change_working_directory[0]=='/':
-                self.current_working_directory=os.path.join(self.base_working_directory,change_working_directory[1:])
-            else:
-                self.current_working_directory=os.path.join(    self.current_working_directory,change_working_directory)
-
+        if change_working_directory == '/':
+            self.current_working_directory = self.base_working_directory
+        elif change_working_directory[0] == '/':
+            self.current_working_directory = os.path.join(self.base_working_directory, change_working_directory[1:])
         else:
-            self.connection.send('404 Not Found.\r\n')
-
-    def CDUP(self,cmd):
-        if not os.path.samefile(self.cwd,self.basewd):
-            #learn from stackoverflow
-            self.cwd=os.path.abspath(os.path.join(self.cwd,'..'))
-        self.conn.send('200 OK.\r\n')
+            self.current_working_directory = os.path.join(self.current_working_directory, change_working_directory)
+        self.connection.send('250 OK.\r\n')
 
     def PASV(self, cmd):  # from http://goo.gl/3if2U
         self.pasive_mode = True
@@ -116,7 +106,7 @@ class clientHandler(threading.Thread):
         print self.data_ip
         print 'open', self.data_ip, self.data_port
         self.connection.send('227 Entering Passive Mode (%s,%u,%u).\r\n' %
-                       (','.join(self.data_ip.split('.')), self.data_port >> 8 & 0xFF, self.data_port & 0xFF))
+                             (','.join(self.data_ip.split('.')), self.data_port >> 8 & 0xFF, self.data_port & 0xFF))
 
     def start_datasock(self):
         if self.pasive_mode:
@@ -135,15 +125,15 @@ class clientHandler(threading.Thread):
         self.connection.send('221 Goodbye.\r\n')
         self.login = False
 
-    def LIST(self,cmd):
+    def LIST(self, cmd):
 
         self.connection.send('150 List directory.\r\n')
         print 'list:', self.current_working_directory
         self.start_datasock()
-        listFile=''
+        listFile = ''
         for t in os.listdir(self.current_working_directory):
-            listFile+=self.detail(os.path.join(self.current_working_directory,t))
-            listFile+='\r\n'
+            listFile += self.detail(os.path.join(self.current_working_directory, t))
+            listFile += '\r\n'
         print listFile
         self.data_socket.sendall(listFile)
         self.stop_datasock()
@@ -163,32 +153,6 @@ class clientHandler(threading.Thread):
         pesan = "Commands may be abbreviated. Commands are:\n USER\t PASS\t CWD\t QUIT\n RETR\t STOR\t RNTO\t DELE\n RMD\t MKD\t PWD\t LIST\n HELP\n"
         self.connection.send(pesan)
 
-    def checkExist(self, command):
-        cmd = command.split(' ', 1)[1]
-        if os.path.isdir(str(cmd.strip())):
-            print "true"
-            return True
-        elif os.path.isfile(str(command.strip())):
-            print "true"
-            return True
-        else:
-            print "false"
-            return False
-
-    def RNFR(self, cmd):
-        if self.checkExist(cmd):
-            self.rnfr = os.path.join(self.current_working_directory, str(cmd.split(' ', 1)[1]).strip())
-            print 'rnfr: ' + self.rnfr
-            self.connection.send('350 Ready.\r\n')
-        else:
-            self.connection.send('404 Not Found\r\n')
-
-    def RNTO(self, cmd):
-        rnto = os.path.join(self.current_working_directory, str(cmd.split(' ', 1)[1]).strip())
-        print 'rnto: ' + rnto
-        os.rename(self.rnfr, rnto)
-        self.connection.send('250 File renamed.\r\n')
-
     def MKD(self, command):
         dirname = os.path.join(self.current_working_directory, command.split(" ", 1)[1].strip())
         # print dirname
@@ -197,53 +161,49 @@ class clientHandler(threading.Thread):
 
     def RMD(self, command):
         dirname = os.path.join(self.current_working_directory, command.split(" ", 1)[1].strip())
-        if self.checkExist(command):
-            if allow_delete:
-                os.rmdir(dirname)
-                self.connection.send('250 Directory deleted.\r\n')
-            else:
-                self.connection.send('450 Not allowed.\r\n')
+        if allow_delete:
+            os.rmdir(dirname)
+            self.connection.send('250 Directory deleted.\r\n')
         else:
-            self.connection.send('404 Not Found.\r\n')
+            self.connection.send('450 Not allowed.\r\n')
 
     def DELE(self, command):
         filename = os.path.join(self.current_working_directory, command.split(" ", 1)[1].strip())
-        if self.checkExist(command):
-            if allow_delete:
-                os.remove(filename)
-                self.connection.send('250 File delete.\r\n')
-            else:
-                self.connection.send('450 Not allowed.\r\n')
+        if allow_delete:
+            os.remove(filename)
+            self.connection.send('250 File delete.\r\n')
         else:
-            self.connection.send('404 Not Found.\r\n')
-    def RETR(self,command):
+            self.connection.send('450 Not allowed.\r\n')
+
+    def RETR(self, command):
         print command
-        requestedfile=os.path.join(self.current_working_directory,command.split()[1].strip())
+        requestedfile = os.path.join(self.current_working_directory, command.split()[1].strip())
         print 'Downloading: ', requestedfile
-        inputfile=open(requestedfile,'rb')
+        inputfile = open(requestedfile, 'rb')
         self.connection.send('150 Opening data connection.\r\n')
-        data=inputfile.read(1024)
+        data = inputfile.read(1024)
         self.start_datasock()
         while data:
             self.data_socket.send(data)
-            data=inputfile.read(1024)
+            data = inputfile.read(1024)
         inputfile.close()
         self.stop_datasock()
         self.connection.send('226 Transfer complete.\r\n')
 
-    def STOR(self,command):
-        requestedfile=os.path.join(self.current_working_directory,command.split()[1].strip())
+    def STOR(self, command):
+        requestedfile = os.path.join(self.current_working_directory, command.split()[1].strip())
         print 'Uploading: ', requestedfile
-        outputfile=open(requestedfile,'wb')
+        outputfile = open(requestedfile, 'wb')
         self.connection.send('150 Opening data connection.\r\n')
         self.start_datasock()
         while True:
-            data=self.data_socket.recv(1024)
+            data = self.data_socket.recv(1024)
             if not data: break
             outputfile.write(data)
         outputfile.close()
         self.stop_datasock()
         self.connection.send('226 Transfer complete.\r\n')
+
 
 class FTPmain(threading.Thread):
     def __init__(self, server_address):
@@ -264,13 +224,30 @@ class FTPmain(threading.Thread):
                     thr.daemon = True
                     thr.start()
 
+    def RMD(self, command):
+        dirname = os.path.join(self.current_working_directory, command.split(" ", 1)[1].strip())
+        if allow_delete:
+            os.rmdir(dirname)
+            self.connection.send('250 Directory deleted.\r\n')
+        else:
+            self.connection.send('450 Not allowed.\r\n')
+
+    def DELE(self, command):
+        filename = os.path.join(self.current_working_directory, command.split(" ", 1)[1].strip())
+        if allow_delete:
+            os.remove(filename)
+            self.connection.send('250 File delete.\r\n')
+        else:
+            self.connection.send('450 Not allowed.\r\n')
+
     def stop(self):
         self.server_socket.close()
 
+
 if __name__ == '__main__':
     server_address = (ip_address, port)
-    ftp=FTPmain(server_address)
-    ftp.daemon=True
+    ftp = FTPmain(server_address)
+    ftp.daemon = True
     ftp.start()
     print 'On', server_address[0], ':', server_address[1]
     raw_input('Press Enter to Stop\n')
