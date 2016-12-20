@@ -61,6 +61,7 @@ class clientHandler(threading.Thread):
 
     def USER(self, command):
         self.username = command.strip().split()[1]
+        self.setName(self.username)
         kirim = '331 Password required for ' + self.username + '\r\n'
         self.connection.send(kirim)
 
