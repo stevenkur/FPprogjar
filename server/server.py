@@ -111,7 +111,7 @@ class clientHandler(threading.Thread):
         self.data_socket.close()
         if self.pasive_mode:
             self.pasive_socket.close()
-            
+
      def QUIT(self, command):
         self.connection.send('221 Goodbye.\r\n')
         self.login = False
@@ -214,22 +214,6 @@ class FTPmain(threading.Thread):
                     thr.daemon = True
                     thr.start()
 
-    def RMD(self,command):
-        dirname=os.path.join(self.current_working_directory,command.split(" ",1)[1].strip())
-        if allow_delete:
-            os.rmdir(dirname)
-            self.connection.send('250 Directory deleted.\r\n')
-        else:
-            self.connection.send('450 Not allowed.\r\n')
-
-    def DELE(self,command):
-        filename=os.path.join(self.current_working_directory,command.split(" ",1)[1].strip())
-        if allow_delete:
-            os.remove(filename)
-            self.connection.send('250 File delete.\r\n')
-        else:
-            self.connection.send('450 Not allowed.\r\n')
-            
     def stop(self):
         self.server_socket.close()
 
