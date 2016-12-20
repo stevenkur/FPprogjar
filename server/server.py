@@ -8,6 +8,7 @@ import select
 BUFF = 1024
 current_directory = os.path.abspath('./Dataset')
 ip_address = ''
+# print ip_address
 port = 30000
 allow_delete = True
 
@@ -37,21 +38,26 @@ class clientHandler(threading.Thread):
         self.connection.send('220 Team: bayu, rifat, rey, stevenkur\r\n')
         self.connection.send('220 Please Check: https://github.com/stevenkur/FPprogjar\r\n')
         while True:
-            command = self.connection.recv(BUFF)
-            print command[:4]
-            if command[:4] == "USER" or command[:4] == "PASS" or self.login:
-                print self.getName() + " using " + command
-                try:
-                    function = getattr(self, command.split()[0].strip().upper())
-                    function(command)
-                except Exception, e:
-                    print 'ERROR:', e
-                    self.connection.send('500 Syntax Error.\r\n')
-            elif not command:
-                self.connection.close()
-                break
-            else:
-                self.connection.send('530 Please login with USER and PASS\r\n')
+            try:
+                command = self.connection.recv(BUFF)
+
+                print command.split()[0]
+                # print command
+                if str(command.split()[0]).upper() == "USER" or str(command.split()[0]).upper() == "PASS" or self.login:
+                    print self.getName() + " using " + command
+                    try:
+                        function = getattr(self, command.split()[0].strip().upper())
+                        function(command)
+                    except Exception, e:
+                        print 'ERROR:', e
+                        self.connection.send('500 Syntax Error.\r\n')
+                elif not command:
+                    self.connection.close()
+                    break
+                else:
+                    self.connection.send('530 Please login with USER and PASS\r\n')
+            except:
+                continue
 
     def USER(self, command):
         self.username = command.strip().split()[1]
@@ -89,12 +95,14 @@ class clientHandler(threading.Thread):
         else:
             self.current_working_directory=os.path.join(self.current_working_directory,change_working_directory)
         self.connection.send('250 OK.\r\n')
+
     def PASV(self, cmd):  # from http://goo.gl/3if2U
         self.pasive_mode = True
         self.pasive_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.pasive_socket.bind((ip_address, 0))
         self.pasive_socket.listen(1)
         self.data_ip, self.data_port = self.pasive_socket.getsockname()
+        print self.data_ip
         print 'open', self.data_ip, self.data_port
         self.connection.send('227 Entering Passive Mode (%s,%u,%u).\r\n' %
                        (','.join(self.data_ip.split('.')), self.data_port >> 8 & 0xFF, self.data_port & 0xFF))
@@ -111,26 +119,26 @@ class clientHandler(threading.Thread):
         self.data_socket.close()
         if self.pasive_mode:
             self.pasive_socket.close()
-
+            
      def QUIT(self, command):
         self.connection.send('221 Goodbye.\r\n')
         self.login = False
 
     def LIST(self,cmd):
-        self.connection.send('150 Here comes the directory listing.\r\n')
+
+        self.connection.send('150 List directory.\r\n')
         print 'list:', self.current_working_directory
         self.start_datasock()
-        k=''
+        listFile=''
         for t in os.listdir(self.current_working_directory):
-            k+=self.toListItem(os.path.join(self.current_working_directory,t))
-            # self.datasock.send(k+'\r\n')
-            k+='\r\n'
-        print k
-        self.data_socket.sendall(k)
+            listFile+=self.detail(os.path.join(self.current_working_directory,t))
+            listFile+='\r\n'
+        print listFile
+        self.data_socket.sendall(listFile)
         self.stop_datasock()
         self.connection.send('226 Directory send OK.\r\n')
 
-    def toListItem(self, fn):
+    def detail(self, fn):
         st = os.stat(fn)
         fullmode = 'rwxrwxrwx'
         mode = ''
