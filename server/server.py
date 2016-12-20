@@ -202,6 +202,9 @@ class clientHandler(threading.Thread):
         print command
         requestedfile=os.path.join(self.current_working_directory,command.split()[1].strip())
         print 'Downloading: ', requestedfile
+        filesize=os.stat(requestedfile).st_size
+        print filesize
+        self.connection.send('filesize: '+ str(filesize))
         inputfile=open(requestedfile,'rb')
         self.connection.send('150 Opening data connection.\r\n')
         data=inputfile.read(1024)
