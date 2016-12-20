@@ -91,24 +91,24 @@ class clientHandler(threading.Thread):
     def CWD(self,command):
         change_working_directory = command[4:-2]
         if self.checkExist(command):
-            os.chdir(change_working_directory)
+            # os.chdir(change_working_directory)
             self.connection.send('250 OK.\r\n')
             if change_working_directory =='/':
                 self.current_working_directory =self.base_working_directory
             elif change_working_directory[0]=='/':
                 self.current_working_directory=os.path.join(self.base_working_directory,change_working_directory[1:])
             else:
-                self.current_working_directory=os.path.join(    self.current_working_directory,change_working_directory)
+                self.current_working_directory=os.path.join(self.current_working_directory,change_working_directory)
 
         else:
             self.connection.send('404 Not Found.\r\n')
 
-    def CDUP(self,cmd):
-        os.chdir(os.pardir)
-        self.current_working_directory = os.path.join(    self.current_working_directory,'..')
-        self.connection.send('200 OK.\r\n')
+    # def CDUP(self,cmd):
+    #     os.chdir(os.pardir)
+    #     self.current_working_directory = os.path.join(    self.current_working_directory,'..')
+    #     self.connection.send('200 OK.\r\n')
 
-    def PASV(self, cmd):  # from http://goo.gl/3if2U
+    def PASV(self, cmd):
         self.pasive_mode = True
         self.pasive_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.pasive_socket.bind((ip_address, 0))
@@ -165,11 +165,16 @@ class clientHandler(threading.Thread):
         self.connection.send(pesan)
 
     def checkExist(self, command):
-        cmd = command.split(' ', 1)[1]
-        if os.path.isdir(str(cmd.strip())):
-            print "true"
-            return True
-        elif os.path.isfile(str(command.strip())):
+        cmd = command.split(' ', 1)[1].strip()
+        # print cmd
+        flag=0
+        for t in os.listdir(self.current_working_directory):
+            # print t , cmd
+            if str(t) == str(cmd):
+                flag = 1
+                break
+
+        if flag:
             print "true"
             return True
         else:
