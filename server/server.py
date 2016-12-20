@@ -203,15 +203,15 @@ class clientHandler(threading.Thread):
         requestedfile=os.path.join(self.current_working_directory,command.split()[1].strip())
         print 'Downloading: ', requestedfile
         filesize=os.stat(requestedfile).st_size
-        print filesize
+        # print filesize
         self.connection.send('filesize: '+ str(filesize))
         inputfile=open(requestedfile,'rb')
         self.connection.send('150 Opening data connection.\r\n')
-        data=inputfile.read(1024)
+        data=inputfile.read(BUFF)
         self.start_datasock()
         while data:
             self.data_socket.send(data)
-            data=inputfile.read(1024)
+            data=inputfile.read(BUFF)
         inputfile.close()
         self.stop_datasock()
         self.connection.send('226 Transfer complete.\r\n')
@@ -221,11 +221,16 @@ class clientHandler(threading.Thread):
         print 'Uploading: ', requestedfile
         outputfile=open(requestedfile,'wb')
         self.connection.send('150 Opening data connection.\r\n')
+        size = self.connection.recv(BUFF)
+        filesize=long(size.split(" ")[1])
         self.start_datasock()
-        while True:
-            data=self.data_socket.recv(1024)
-            if not data: break
-            outputfile.write(data)
+        self.isi = ""
+        receive_size=0
+        while (receive_size<filesize):
+            self.isi += self.data_socket.recv(BUFF)
+            receive_size=len(self.isi)
+            # print receive_size
+        outputfile.write(self.isi)
         outputfile.close()
         self.stop_datasock()
         self.connection.send('226 Transfer complete.\r\n')

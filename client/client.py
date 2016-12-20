@@ -146,20 +146,20 @@ class Client:
         self.data_sock.connect((ip_server,port))
         command+="\r\n"
         self.server.send(command)
-        msg = self.server.recv(1024)
-        msg1 = self.server.recv(1024)
+        size = self.server.recv(BUFFER)
+        msg = self.server.recv(BUFFER)
+        # print size.strip()
         print msg.strip()
-        print msg1.strip()
-        filesize=long(msg.split(" ")[1])
+        filesize=long(size.split(" ")[1])
         with open (filename, 'wb') as f:
             self.isi = ""
             receive_size=0
             while (receive_size<filesize):
-                    #f.write(self.isi)
-                    self.isi += self.data_sock.recv(4096)
-                    receive_size=len(self.isi)
-                    #print receive_size
-        msg = self.server.recv(1024)
+                self.isi += self.data_sock.recv(BUFFER)
+                receive_size=len(self.isi)
+                # print receive_size
+            f.write(self.isi)
+        msg = self.server.recv(BUFFER)
         print msg.strip()
 
     def STOR(self, command):
@@ -170,16 +170,20 @@ class Client:
 
         command+="\r\n"
         self.server.send(command)
-        msg = self.server.recv(1024)
+        msg = self.server.recv(BUFFER)
         print msg.strip()
-        
-        f = open(filename,'rb')
-        l = f.read()
-        f.close()
-        self.data_sock.sendall(l)
+        filesize=os.stat(filename).st_size
+        # print filesize
+        self.server.send('filesize: '+ str(filesize))
+        sendfile = open(filename,'rb')
+        data=sendfile.read(BUFFER)
+        while data:
+            self.data_sock.send(data)
+            data=sendfile.read(BUFFER)
+        sendfile.close()
         self.data_sock.close()
         
-        msg = self.server.recv(1024)
+        msg = self.server.recv(BUFFER)
         print msg.strip()
 
 
