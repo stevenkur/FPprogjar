@@ -2,7 +2,7 @@ import socket
 import os
 from select import select
 
-
+ip_server ='localhost'
 BUFFER = 1024
 
 currentDirectory = os.path.abspath('.')
@@ -119,7 +119,7 @@ class Client:
         print msg.rstrip()
 
     def HELP(self, command):
-        print "masuk sni"
+        print "masuk sini"
         self.server.send(command)
         msg = self.server.recv(BUFFER)
         print msg.rstrip()
@@ -143,20 +143,22 @@ class Client:
         filename=os.path.join(self.currentDirectory,command[5:].strip())
         port=self.PASV("PASV\r\n")
         self.data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.data_sock.connect(('localhost',port))
+        self.data_sock.connect((ip_server,port))
         command+="\r\n"
         self.server.send(command)
         msg = self.server.recv(1024)
+        msg1 = self.server.recv(1024)
         print msg.strip()
-
+        print msg1.strip()
+        filesize=long(msg.split(" ")[1])
         with open (filename, 'wb') as f:
-            self.isi = self.data_sock.recv(4096)
-            while (self.isi):
-                if not self.isi: break
-                else:
-                    f.write(self.isi)
-                    self.isi = self.data_sock.recv(4096)
-
+            self.isi = ""
+            receive_size=0
+            while (receive_size<filesize):
+                    #f.write(self.isi)
+                    self.isi += self.data_sock.recv(4096)
+                    receive_size=len(self.isi)
+                    #print receive_size
         msg = self.server.recv(1024)
         print msg.strip()
 
@@ -164,7 +166,7 @@ class Client:
         filename=os.path.join(self.currentDirectory,command[5:].strip())
         port=self.PASV("PASV\r\n")
         self.data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.data_sock.connect(('localhost',port))
+        self.data_sock.connect((ip_server,port))
 
         command+="\r\n"
         self.server.send(command)
@@ -182,7 +184,7 @@ class Client:
 
 
 def main():
-    new_client = Client(('localhost',30000))
+    new_client = Client((ip_server,30000))
     # new_client = Client(('10.151.43.17', 12345))
     new_client.run()
 
