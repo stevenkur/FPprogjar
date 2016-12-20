@@ -2,7 +2,7 @@ import socket
 import os
 from select import select
 
-
+ip_server ='localhost'
 BUFFER = 1024
 
 currentDirectory = os.path.abspath('.')
@@ -119,7 +119,7 @@ class Client:
         print msg.rstrip()
 
     def HELP(self, command):
-        print "masuk sni"
+        print "masuk sini"
         self.server.send(command)
         msg = self.server.recv(BUFFER)
         print msg.rstrip()
@@ -143,7 +143,7 @@ class Client:
         filename=os.path.join(self.currentDirectory,command[5:].strip())
         port=self.PASV("PASV\r\n")
         self.data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.data_sock.connect(('localhost',port))
+        self.data_sock.connect(('ip_server',port))
         command+="\r\n"
         self.server.send(command)
         msg = self.server.recv(1024)
@@ -164,7 +164,7 @@ class Client:
         filename=os.path.join(self.currentDirectory,command[5:].strip())
         port=self.PASV("PASV\r\n")
         self.data_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.data_sock.connect(('localhost',port))
+        self.data_sock.connect(('ip_server',port))
 
         command+="\r\n"
         self.server.send(command)
@@ -182,7 +182,7 @@ class Client:
 
 
 def main():
-    new_client = Client(('localhost',30000))
+    new_client = Client(('ip_server',30000))
     # new_client = Client(('10.151.43.17', 12345))
     new_client.run()
 
