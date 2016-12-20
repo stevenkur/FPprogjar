@@ -119,8 +119,8 @@ class clientHandler(threading.Thread):
         self.data_socket.close()
         if self.pasive_mode:
             self.pasive_socket.close()
-            
-     def QUIT(self, command):
+
+    def QUIT(self, command):
         self.connection.send('221 Goodbye.\r\n')
         self.login = False
 
@@ -151,6 +151,30 @@ class clientHandler(threading.Thread):
     def HELP(self, command):
         pesan = "Commands may be abbreviated. Commands are:\n USER\t PASS\t CWD\t QUIT\n RETR\t STOR\t RNTO\t DELE\n RMD\t MKD\t PWD\t LIST\n HELP\n"
         self.connection.send(pesan)
+
+    def checkExist(self, command):
+        print str(command).strip()
+
+        if os.path.exists(str(command).strip()):
+            print "true"
+            return True
+        else:
+            print "false"
+            return False
+
+    def RNFR(self, cmd):
+        if self.checkExist(cmd.split(' ', 1)[1]):
+            self.rnfr = os.path.join(self.current_working_directory, str(cmd.split(' ', 1)[1]).strip())
+            print 'rnfr: ' + self.rnfr
+            self.connection.send('350 Ready.\r\n')
+        else:
+            self.connection.send('404 Not Found\r\n')
+
+    def RNTO(self, cmd):
+        rnto = os.path.join(self.current_working_directory, str(cmd.split(' ', 1)[1]).strip())
+        print 'rnto: ' + rnto
+        os.rename(self.rnfr, rnto)
+        self.connection.send('250 File renamed.\r\n')
 
     def MKD(self, command):
         dirname = os.path.join(self.current_working_directory, command.split(" ", 1)[1].strip())
