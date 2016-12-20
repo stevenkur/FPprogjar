@@ -84,6 +84,7 @@ class clientHandler(threading.Thread):
             current_working_directory = '/'
         else:
             current_working_directory = '/' + current_working_directory
+        current_working_directory=current_working_directory.replace('\\','/')
         self.connection.send('257 \"%s\"\r\n' % current_working_directory)
 
     def CWD(self,command):
@@ -102,10 +103,9 @@ class clientHandler(threading.Thread):
             self.connection.send('404 Not Found.\r\n')
 
     def CDUP(self,cmd):
-        if not os.path.samefile(self.cwd,self.basewd):
-            #learn from stackoverflow
-            self.cwd=os.path.abspath(os.path.join(self.cwd,'..'))
-        self.conn.send('200 OK.\r\n')
+        os.chdir(os.pardir)
+        self.current_working_directory = os.path.join(    self.current_working_directory,'..')
+        self.connection.send('200 OK.\r\n')
 
     def PASV(self, cmd):  # from http://goo.gl/3if2U
         self.pasive_mode = True
